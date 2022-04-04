@@ -1,0 +1,5 @@
+#@ load("@ytt:overlay", "overlay")
+#@overlay/match by=overlay.all
+#@overlay/match-child-defaults missing_ok=True
+#@overlay/match-child-defaults expects="0+"
+---

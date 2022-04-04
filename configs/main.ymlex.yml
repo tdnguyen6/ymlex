@@ -1,0 +1,19 @@
+matcher:
+  key: _ymlex_
+  level:
+    min: 2
+    max: -1
+solvers:
+  bitwarden:
+    type: bash
+    location:
+      file: https://github.com/tidunguyen/ymlex/solvers/bitwarden/script.sh
+  aws:
+    type: binary
+    args:
+    - -o=yaml
+    location: s3|http|git|local
+  my-custom-solver:
+    type: bash
+    inline: |
+      world

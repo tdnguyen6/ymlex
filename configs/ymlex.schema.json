@@ -1,0 +1,140 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "matcher": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "level": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "max": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "solvers": {
+            "additionalProperties": {
+                "additionalProperties": false,
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "python",
+                            "bash",
+                            "binary"
+                        ]
+                    },
+                    "location": true,
+                    "args": true,
+                    "inline": {
+                        "type": "string"
+                    },
+                    "env.yml": true
+                },
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "python"
+                                }
+                            }
+                        },
+                        "then": {
+                            "dependencies": {
+                                "type": [
+                                    "env.yml"
+                                ]
+                            },
+                            "properties": {
+                                "env.yml": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "else": {
+                            "properties": {
+                                "env.yml": false
+                            }
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "type": {
+                                    "const": "binary"
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "args": {
+                                    "type": "array"
+                                },
+                                "location": {
+                                    "type": "string"
+                                },
+                                "inline": false
+                            }
+                        },
+                        "else": {
+                            "properties": {
+                                "location": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "dir": {
+                                            "type": "string"
+                                        },
+                                        "file": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "oneOf": [
+                                        {
+                                            "required": [
+                                                "dir"
+                                            ]
+                                        },
+                                        {
+                                            "required": [
+                                                "file"
+                                            ]
+                                        }
+                                    ],
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "required": [
+                    "type"
+                ],
+                "oneOf": [
+                    {
+                        "required": [
+                            "location"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "inline"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "additionalProperties": false
+}

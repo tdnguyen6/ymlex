@@ -1,0 +1,41 @@
+a:
+  b:
+    c:
+      _ymlex_[pwd]:
+        solver: bitwarden
+        args:
+          - --kind=item
+          - --name="GitHub File Fetcher"
+          - --path=.login.username
+
+h:
+  b:
+    c:
+      f:
+        _ymlex_[pwd]:
+          solver: bitwarden
+          args:
+            - --kind=item
+            - --name="GitHub File Fetcher"
+            - --path=.login.password
+---
+a:
+  b:
+    c:
+      _ymlex_[pwd]:
+        solver: bitwarden
+        args:
+          - --kind=item
+          - --name="GitHub File Fetcher"
+          - --path=.login.username
+
+h:
+  b:
+    c:
+      f:
+        _ymlex_[pwd]:
+          solver: bitwarden
+          args:
+            - --kind=item
+            - --name="GitHub File Fetcher"
+            - --path=.login.password

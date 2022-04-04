@@ -1,0 +1,15 @@
+{
+  "yaml.schemas": {
+    "configs/ymlex.schema.json": [
+      "**/*.ymlex.yml"
+    ]
+  },
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "**/*.ymlex.json"
+      ],
+      "url": "configs/ymlex.schema.json"
+    }
+  ]
+}
