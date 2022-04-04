@@ -1,5 +1,5 @@
 matcher:
-  key: _ymlex_
+  key: ^_ymlex_\[(?<actual_key>.*)\]$
   level:
     min: 0
     max: -1
@@ -8,4 +8,4 @@ solvers:
   bitwarden:
     type: bash
     location:
-      file: https://github.com/tidunguyen/ymlex/solvers/bitwarden/script.sh
+      file: https://raw.githubusercontent.com/tidunguyen/ymlex/main/solvers/bitwarden/script.sh

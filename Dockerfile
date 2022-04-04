@@ -1,1 +1,1 @@
-bitwarden-cli python jq ytt
+bitwarden-cli python jq ytt conda

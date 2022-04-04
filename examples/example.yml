@@ -5,7 +5,7 @@ a:
         solver: bitwarden
         args:
           - --kind=item
-          - --name="GitHub File Fetcher"
+          - --name=GitHub File Fetcher
           - --path=.login.username
 
 h:
@@ -16,7 +16,7 @@ h:
           solver: bitwarden
           args:
             - --kind=item
-            - --name="GitHub File Fetcher"
+            - --name=GitHub File Fetcher
             - --path=.login.password
 ---
 a:
@@ -26,8 +26,11 @@ a:
         solver: bitwarden
         args:
           - --kind=item
-          - --name="GitHub File Fetcher"
+          - --name=GitHub File Fetcher
           - --path=.login.username
+      hello:
+        x: world
+        u: 2
 
 h:
   b:
@@ -37,5 +40,5 @@ h:
           solver: bitwarden
           args:
             - --kind=item
-            - --name="GitHub File Fetcher"
+            - --name=GitHub File Fetcher
             - --path=.login.password
