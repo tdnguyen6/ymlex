@@ -1,6 +1,6 @@
 mod models;
 
-use std::{fs::File, process};
+use std::{env::home_dir, fs::File, process};
 
 use anyhow::Result;
 use cmd_lib::{run_cmd, spawn_with_output};
@@ -101,7 +101,9 @@ fn resolve(
 }
 
 fn main() -> Result<()> {
-    let config: serde_yaml::Value = serde_yaml::from_reader(File::open("configs/main.ymlex.yml")?)?;
+    let config: serde_yaml::Value =
+        serde_yaml::from_str(&spawn_with_output!(make generate-config)?.wait_with_output()?)?;
+    println!("{}", home_dir().unwrap().to_str().unwrap());
     let validation = validate_config(serde_yaml::from_value::<serde_json::Value>(config.clone())?)?;
 
     if !validation.is_valid() {

@@ -9,4 +9,4 @@ overlay-annotate:
 	fi
 
 generate-config: overlay-annotate
-	ytt -f configs/overlay.ymlex.yml -f configs/default.ymlex.yml > configs/main.ymlex.yml
+	ytt -f configs/overlay.ymlex.yml -f configs/default.ymlex.yml

@@ -5,7 +5,7 @@
 ---
 matcher:
   level:
-    min: 2
+    max: 3
 
 solvers:
   aws:
