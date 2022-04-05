@@ -1,9 +1,14 @@
+#@ load("@ytt:overlay", "overlay")
+#@overlay/match by=overlay.all
+#@overlay/match-child-defaults missing_ok=True
+#@overlay/match-child-defaults expects="0+"
+---
 matcher:
   level:
     min: 2
 
 solvers:
-  aws:
+  bitwarden:
     type: binary
     args:
       - -o=yaml

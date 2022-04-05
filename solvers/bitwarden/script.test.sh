@@ -156,17 +156,18 @@ parse_commandline "$@"
 # BW_CLIENTSECRET
 #################
 
-script_full_path=$(dirname "$0")
-BW_SESSION="$(cat "$script_full_path"/bw_session 2>/dev/null)"
-export BW_SESSION
-while ! "$script_full_path/bw" sync 1>/dev/null 2>&1; do
-	"$script_full_path/bw" login --apikey 1>/dev/null 2>&1
-	BW_SESSION="$("$script_full_path/bw" unlock --raw --passwordenv BW_PASSWORD)"
-	export BW_SESSION
-	echo "$BW_SESSION" > "$script_full_path/bw_session"
-	sleep 5
-done
+# script_full_path=$(dirname "$0")
+# BW_SESSION="$(cat "$script_full_path"/bw_session 2>/dev/null)"
+# export BW_SESSION
+# while ! "$script_full_path/bw" sync 1>/dev/null 2>&1; do
+# 	"$script_full_path/bw" login --apikey 1>/dev/null 2>&1
+# 	BW_SESSION="$("$script_full_path/bw" unlock --raw --passwordenv BW_PASSWORD)"
+# 	export BW_SESSION
+# 	echo "$BW_SESSION" > "$script_full_path/bw_session"
+# 	sleep 5
+# done
 
-"$script_full_path/bw" get "$_arg_kind" "$_arg_name" 2>/dev/null | jq -r "$_arg_path"
+# "$script_full_path/bw" get "$_arg_kind" "$_arg_name" 2>/dev/null | jq -r "$_arg_path"
+bw get "$_arg_kind" "$_arg_name" 2>/dev/null | jq -r "$_arg_path"
 
 # ] <-- needed because of Argbash

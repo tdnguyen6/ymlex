@@ -1,24 +1,19 @@
 mod models;
-
-use std::{fs::File, process};
+mod utils;
 
 use anyhow::Result;
+use async_recursion::async_recursion;
+use clap::Parser;
 use cmd_lib::{run_cmd, spawn_with_output};
 use fancy_regex::Regex;
-use serde::{Deserialize, Serialize};
-use valico::json_schema::{self, ValidationState};
+use serde::Deserialize;
+use std::{
+    fs::{create_dir_all, File},
+    process,
+};
+use tempdir::TempDir;
 
-fn validate_config(config: serde_json::Value) -> Result<ValidationState> {
-    let json_schema: serde_json::Value =
-        serde_json::from_reader(File::open("configs/ymlex.schema.json").unwrap()).unwrap();
-
-    let mut scope = json_schema::Scope::new();
-    let schema = scope
-        .compile_and_return(json_schema.clone(), false)
-        .unwrap();
-
-    Ok(schema.validate(&config))
-}
+use utils::*;
 
 fn get_solver(solvers: &serde_yaml::Value, query: &str) -> Result<serde_yaml::Value> {
     if let serde_yaml::Value::Mapping(s) = solvers.clone() {
@@ -45,7 +40,8 @@ fn match_key(matcher: &models::Matcher, query: &str) -> Result<(bool, String)> {
     }
 }
 
-fn resolve(
+#[async_recursion]
+async fn resolve(
     solvers: &serde_yaml::Value,
     doc: &serde_yaml::Value,
     new_doc: &mut serde_yaml::Value,
@@ -69,12 +65,18 @@ fn resolve(
                             .collect::<Vec<&str>>();
                         new_doc[mk.1] = match solver["type"].as_str().unwrap() {
                             "bash" => {
+                                let dir = TempDir::new("ymlex")?;
+                                let script_path = dir.path().join("script.sh");
+                                get_file_over_http(
+                                    http_path,
+                                    script_path.to_str().unwrap_or_default(),
+                                )
+                                .await?;
                                 run_cmd!(
-                                    curl -LO $http_path;
-                                    chmod +x script.sh
+                                    chmod +x $script_path
                                 )?;
                                 serde_yaml::Value::String(
-                                    spawn_with_output!(./script.sh $[arg_str] 2>&1)?
+                                    spawn_with_output!($script_path $[arg_str] 2>&1)?
                                         .wait_with_output()?,
                                 )
                             }
@@ -91,7 +93,8 @@ fn resolve(
                         &mut new_doc[k],
                         matcher,
                         current_level + 1,
-                    )?;
+                    )
+                    .await?;
                 }
             }
             _ => new_doc[k] = v.clone(),
@@ -100,23 +103,35 @@ fn resolve(
     Ok(())
 }
 
-fn overlaying_config(default: &serde_yaml::Value, overlay: &mut serde_yaml::Value) -> Result<()> {
-    if let Some(map) = default.as_mapping() {
-        for (k, v) in map {
-            if let None = overlay.get(k) {
-                overlay[k] = v.clone();
-            }
-            overlaying_config(&default[k], &mut overlay[k])?
-        }
-    }
+fn config_dir() -> String {
+    format!(
+        "{}/.config/ymlex",
+        home::home_dir().unwrap_or_default().display()
+    )
+}
+
+async fn setup_config() -> Result<()> {
+    create_dir_all(config_dir()).unwrap();
+    utils::get_file_over_http(
+        "https://raw.githubusercontent.com/tidunguyen/ymlex/main/configs/default.ymlex.yml",
+        &format!("{}/default.ymlex.yml", config_dir()),
+    )
+    .await?;
     Ok(())
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = models::Args::parse();
+    setup_config().await?;
     let default_config: serde_yaml::Value =
-        serde_yaml::from_reader(File::open("configs/default.ymlex.yml")?)?;
-    let mut config: serde_yaml::Value =
-        serde_yaml::from_reader(File::open("configs/overlay.ymlex.yml")?)?;
+        serde_yaml::from_reader(File::open(format!("{}/default.ymlex.yml", config_dir()))?)?;
+    let mut config: serde_yaml::Value = serde_yaml::Value::Null;
+    let config_path = format!("{}/overlay.ymlex.yml", config_dir());
+    if std::path::Path::new(&config_path).exists() {
+        config =
+            serde_yaml::from_reader(File::open(config_path)?)?;
+    }
 
     overlaying_config(&default_config, &mut config)?;
 
@@ -133,13 +148,18 @@ fn main() -> Result<()> {
         matcher.level.max = std::i8::MAX;
     }
 
-    for doc_deserializer in
-        serde_yaml::Deserializer::from_reader(File::open("examples/example.yml")?)
-    {
-        let doc = serde_yaml::Value::deserialize(doc_deserializer)?;
-        let mut new_doc = serde_yaml::Value::Mapping(serde_yaml::Mapping::new());
-        resolve(&config["solvers"], &doc, &mut new_doc, &matcher, 0)?;
-        println!("{}", serde_yaml::to_string(&new_doc)?);
+    match args.input.as_str() {
+        "stdin" => {
+            let stdin = std::io::stdin();
+            let stdin = stdin.lock();
+            for doc_deserializer in serde_yaml::Deserializer::from_reader(stdin) {
+                let doc = serde_yaml::Value::deserialize(doc_deserializer)?;
+                let mut new_doc = serde_yaml::Value::Mapping(serde_yaml::Mapping::new());
+                resolve(&config["solvers"], &doc, &mut new_doc, &matcher, 0).await?;
+                println!("{}", serde_yaml::to_string(&new_doc)?);
+            }
+        }
+        _ => println!("{}", "Only support stdin for now"),
     }
     Ok(())
 }

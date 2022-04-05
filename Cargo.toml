@@ -7,10 +7,17 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.56"
-clap = "3.1.8"
+async-recursion = "1.0.0"
+clap = { version = "3.1.8", features = ["derive", "regex"] }
 cmd_lib = "1.3.0"
 fancy-regex = "0.8.0"
+home = "0.5.3"
+reqwest = "0.11.10"
+rusoto_core = "0.47.0"
+rusoto_s3 = "0.47.0"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 serde_yaml = "0.8.23"
+tempdir = "0.3.7"
+tokio = "1.17.0"
 valico = "3.6.0"
