@@ -1,11 +1,11 @@
 mod models;
 
-use std::{env::home_dir, fs::File, process};
+use std::{fs::File, process};
 
 use anyhow::Result;
 use cmd_lib::{run_cmd, spawn_with_output};
 use fancy_regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use valico::json_schema::{self, ValidationState};
 
 fn validate_config(config: serde_json::Value) -> Result<ValidationState> {
@@ -100,10 +100,26 @@ fn resolve(
     Ok(())
 }
 
+fn overlaying_config(default: &serde_yaml::Value, overlay: &mut serde_yaml::Value) -> Result<()> {
+    if let Some(map) = default.as_mapping() {
+        for (k, v) in map {
+            if let None = overlay.get(k) {
+                overlay[k] = v.clone();
+            }
+            overlaying_config(&default[k], &mut overlay[k])?
+        }
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    let config: serde_yaml::Value =
-        serde_yaml::from_str(&spawn_with_output!(make generate-config)?.wait_with_output()?)?;
-    println!("{}", home_dir().unwrap().to_str().unwrap());
+    let default_config: serde_yaml::Value =
+        serde_yaml::from_reader(File::open("configs/default.ymlex.yml")?)?;
+    let mut config: serde_yaml::Value =
+        serde_yaml::from_reader(File::open("configs/overlay.ymlex.yml")?)?;
+
+    overlaying_config(&default_config, &mut config)?;
+
     let validation = validate_config(serde_yaml::from_value::<serde_json::Value>(config.clone())?)?;
 
     if !validation.is_valid() {
@@ -111,6 +127,7 @@ fn main() -> Result<()> {
         println!("{:#?}", validation.errors);
         process::exit(1);
     }
+
     let mut matcher: models::Matcher = serde_yaml::from_value(config["matcher"].clone())?;
     if matcher.level.max == -1 {
         matcher.level.max = std::i8::MAX;

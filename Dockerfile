@@ -14,6 +14,5 @@ RUN /tmp/bw config server https://vaultwarden.gambaru.io
 COPY target/release/ymlex ymlex
 COPY configs ./configs
 COPY solvers ./solvers
-COPY examples ./examples
 COPY Makefile ./Makefile
 RUN mv -v /tmp/bw solvers/bitwarden/bw
